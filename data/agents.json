@@ -1,0 +1,30 @@
+[
+  {"id": "AG-01", "name": "Priya Nair", "team": "Billing", "level": 3, "max_load": 6,
+   "skills": {"Billing": 0.95, "Account": 0.6, "General": 0.7}},
+  {"id": "AG-02", "name": "Marcus Lee", "team": "Billing", "level": 2, "max_load": 8,
+   "skills": {"Billing": 0.85, "General": 0.6}},
+  {"id": "AG-03", "name": "Sofia Alvarez", "team": "Billing", "level": 1, "max_load": 10,
+   "skills": {"Billing": 0.7, "General": 0.6}},
+
+  {"id": "AG-04", "name": "Daniel Kim", "team": "Technical Support", "level": 3, "max_load": 5,
+   "skills": {"Technical": 0.95, "Account": 0.7}},
+  {"id": "AG-05", "name": "Aisha Bello", "team": "Technical Support", "level": 2, "max_load": 7,
+   "skills": {"Technical": 0.85, "Account": 0.55}},
+  {"id": "AG-06", "name": "Tom Fischer", "team": "Technical Support", "level": 1, "max_load": 9,
+   "skills": {"Technical": 0.7, "General": 0.5}},
+
+  {"id": "AG-07", "name": "Hana Sato", "team": "Account Management", "level": 3, "max_load": 6,
+   "skills": {"Account": 0.95, "Technical": 0.6, "Billing": 0.55}},
+  {"id": "AG-08", "name": "Leo Martins", "team": "Account Management", "level": 1, "max_load": 10,
+   "skills": {"Account": 0.75, "General": 0.6}},
+
+  {"id": "AG-09", "name": "Grace Okafor", "team": "Shipping & Delivery", "level": 3, "max_load": 6,
+   "skills": {"Shipping": 0.95, "Billing": 0.6}},
+  {"id": "AG-10", "name": "Ravi Patel", "team": "Shipping & Delivery", "level": 2, "max_load": 8,
+   "skills": {"Shipping": 0.85, "General": 0.55}},
+
+  {"id": "AG-11", "name": "Emma Novak", "team": "General Support", "level": 2, "max_load": 10,
+   "skills": {"General": 0.9, "Shipping": 0.55, "Account": 0.5}},
+  {"id": "AG-12", "name": "Sam Carter", "team": "General Support", "level": 1, "max_load": 12,
+   "skills": {"General": 0.8, "Billing": 0.5}}
+]

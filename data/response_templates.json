@@ -1,0 +1,96 @@
+[
+  {
+    "id": "BIL-001", "category": "Billing", "title": "Duplicate or unexpected charge",
+    "keywords": ["charged twice", "charged", "charges", "double charge", "duplicate", "multiple payments", "unexpected charge", "overcharged", "unauthorized", "unrecognized transaction"],
+    "body": "I've checked the charges on your account, and our billing team is reviewing the transaction, and if a duplicate or incorrect charge is confirmed it will be reversed to your original payment method. Refunds typically appear within 5-10 business days depending on your bank."
+  },
+  {
+    "id": "BIL-002", "category": "Billing", "title": "Refund request",
+    "keywords": ["refund", "money back", "return payment", "reimburse"],
+    "body": "We've received your refund request. Our billing team will review it against our refund policy and confirm the outcome by email. Once approved, the refund is issued to your original payment method."
+  },
+  {
+    "id": "BIL-003", "category": "Billing", "title": "Payment failed or card declined",
+    "keywords": ["payment failed", "declined", "card", "cannot pay", "payment method", "update card"],
+    "body": "Payment failures are usually caused by an expired card, a billing address mismatch, or a bank security hold. Please check your card details under Settings > Billing and try again. If it still fails, reply with the last four digits of the card and we'll investigate from our side."
+  },
+  {
+    "id": "BIL-004", "category": "Billing", "title": "Invoice or subscription question",
+    "keywords": ["invoice", "receipt", "subscription", "plan", "upgrade", "downgrade", "cancel subscription"],
+    "body": "You can view and download all invoices and manage your subscription under Settings > Billing. I've passed your question to our billing team, who will confirm any plan or invoice changes you need."
+  },
+
+  {
+    "id": "TEC-001", "category": "Technical", "title": "Application error or crash",
+    "keywords": ["error", "crash", "bug", "freezes", "not working", "exception"],
+    "body": "Sorry about the trouble you're having. To help our engineers reproduce the issue, please share the exact error message, your device/OS and app or browser version, and the steps that lead to the problem. In the meantime, updating to the latest version and restarting the app resolves many crashes."
+  },
+  {
+    "id": "TEC-002", "category": "Technical", "title": "Performance or loading issues",
+    "keywords": ["slow", "loading", "timeout", "lag", "performance"],
+    "body": "Slow loading can be caused by browser extensions, cached data, or network conditions. Please try clearing your browser cache or using a private window. If the problem continues, send us the time it occurred and a screenshot of the network tab so our team can check the server logs."
+  },
+  {
+    "id": "TEC-003", "category": "Technical", "title": "API or integration problem",
+    "keywords": ["api", "integration", "webhook", "sync", "endpoint", "token", "sdk"],
+    "body": "Thanks for the details. Please confirm the endpoint or integration involved, the request ID or timestamp of a failing call, and the response code you received. Our technical team will review the logs and follow up with a fix or workaround."
+  },
+
+  {
+    "id": "ACC-001", "category": "Account", "title": "Password reset or login problem",
+    "keywords": ["password", "reset", "login", "sign in", "can't log in", "forgot"],
+    "body": "You can reset your password from the login page using \"Forgot password\". The reset link is valid for 30 minutes, so please check your spam folder if it doesn't arrive. If you still can't sign in, let us know and we'll verify your identity and restore access."
+  },
+  {
+    "id": "ACC-002", "category": "Account", "title": "Account locked or suspended",
+    "keywords": ["locked", "locked out", "suspended", "disabled", "blocked"],
+    "body": "Accounts are temporarily locked after several failed sign-in attempts or when unusual activity is detected. Our account team will verify your identity and unlock the account. For security, please reply from the email address registered on the account."
+  },
+  {
+    "id": "ACC-003", "category": "Account", "title": "Two-factor authentication issue",
+    "keywords": ["two-factor", "2fa", "verification code", "authenticator", "sms code"],
+    "body": "If your verification code isn't arriving, please check that your device's time is set automatically and that you're using the most recent code. If you've lost access to your authentication device, we can reset two-factor authentication after verifying your identity."
+  },
+  {
+    "id": "ACC-004", "category": "Account", "title": "Update or delete account details",
+    "keywords": ["change email", "update profile", "username", "delete account", "close account", "team member"],
+    "body": "Most account details, including your email address, username and team members, can be updated under Settings > Account. For account deletion, we'll confirm the request by email before permanently removing your data."
+  },
+
+  {
+    "id": "SHP-001", "category": "Shipping", "title": "Package delayed or not received",
+    "keywords": ["not arrived", "delayed", "late", "where is my order", "not received", "lost package"],
+    "body": "I'm sorry your order hasn't arrived yet. I've asked our shipping team to check with the carrier. If the package is confirmed lost, we'll send a replacement or issue a refund at no extra cost."
+  },
+  {
+    "id": "SHP-002", "category": "Shipping", "title": "Tracking not updating",
+    "keywords": ["tracking", "tracking number", "no updates", "status"],
+    "body": "Tracking information can take up to 48 hours to update after dispatch. If there's been no movement for longer than that, our shipping team will open an investigation with the carrier and update you."
+  },
+  {
+    "id": "SHP-003", "category": "Shipping", "title": "Damaged or wrong item received",
+    "keywords": ["damaged", "broken item", "wrong item", "incorrect item", "return", "replacement"],
+    "body": "Sorry that your order didn't arrive as expected. Please reply with a photo of the item and packaging, and we'll arrange a free return label and send a replacement as soon as the claim is confirmed."
+  },
+  {
+    "id": "SHP-004", "category": "Shipping", "title": "Change delivery address",
+    "keywords": ["change address", "shipping address", "delivery address", "redirect"],
+    "body": "We can update the delivery address as long as the order hasn't been dispatched yet. Please reply with the full new address and we'll confirm whether the change was successful."
+  },
+
+  {
+    "id": "GEN-001", "category": "General", "title": "Product or feature question",
+    "keywords": ["how do i", "question", "feature", "does it support", "information"],
+    "body": "Thanks for your question. Our help center has step-by-step guides for most features, and a member of our team will follow up with a specific answer for your use case."
+  },
+  {
+    "id": "GEN-002", "category": "General", "title": "Feedback or suggestion",
+    "keywords": ["feedback", "suggestion", "idea", "improve", "love", "would be nice"],
+    "body": "Thank you for taking the time to share your feedback. I've passed it on to our product team, who review every suggestion when planning improvements."
+  },
+  {
+    "id": "GEN-003", "category": "General", "title": "Business or partnership inquiry",
+    "keywords": ["partnership", "business", "hours", "discount", "pricing information", "contact"],
+    "body": "Thanks for your interest. I've forwarded your inquiry to the right team, and they'll get back to you with the information you need."
+  }
+]
