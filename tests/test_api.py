@@ -53,6 +53,12 @@ def test_resolve_releases_agent(client):
     assert load() == 0
 
 
+def test_root_redirects_to_docs(client):
+    response = client.get("/", follow_redirects=False)
+    assert response.status_code == 307
+    assert response.headers["location"] == "/docs"
+
+
 def test_unknown_ticket_returns_404(client):
     assert client.get("/tickets/TCK-NOPE").status_code == 404
     assert client.post("/tickets/TCK-NOPE/resolve").status_code == 404

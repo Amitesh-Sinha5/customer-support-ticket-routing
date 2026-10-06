@@ -8,6 +8,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import RedirectResponse
 
 from .pipeline import TicketProcessor
 from .queues import QUEUES
@@ -25,6 +26,10 @@ def create_app(processor: TicketProcessor | None = None) -> FastAPI:
         yield
 
     app = FastAPI(title="Automated Customer Support Ticket Routing & Response", lifespan=lifespan)
+
+    @app.get("/", include_in_schema=False)
+    def root() -> RedirectResponse:
+        return RedirectResponse("/docs")
 
     @app.get("/health")
     def health() -> dict:
