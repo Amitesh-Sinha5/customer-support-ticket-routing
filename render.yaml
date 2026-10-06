@@ -1,0 +1,11 @@
+services:
+  - name: ticket-router
+    type: web
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      # Template drafts only: no Anthropic API usage, so nothing is ever billed.
+      - key: TICKET_LLM_MODE
+        value: "false"

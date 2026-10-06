@@ -108,5 +108,10 @@ def load_or_train() -> TrainedModels:
     logger.info("No trained models found in %s; training from %s",
                 config.ARTIFACTS_DIR, config.HISTORICAL_TICKETS_CSV)
     models, metrics = train_models()
-    save_models(models, metrics)
+    try:
+        save_models(models, metrics)
+    except OSError as exc:
+        # Read-only filesystems are common on hosted platforms; serve from memory instead.
+        logger.warning("Could not save models to %s (%s); they will be retrained on next start.",
+                       config.ARTIFACTS_DIR, exc)
     return models

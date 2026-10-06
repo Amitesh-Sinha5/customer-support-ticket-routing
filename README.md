@@ -7,6 +7,7 @@ A ticket-triage system that receives support tickets (subject, description, prio
 - [Quick start](#quick-start)
 - [Terminal chat](#terminal-chat)
 - [REST API](#rest-api)
+- [Deployment](#deployment)
 - [How each component works](#how-each-component-works)
 - [Data and training](#data-and-training)
 - [Configuration](#configuration)
@@ -130,6 +131,21 @@ curl -X POST localhost:8000/tickets -H "Content-Type: application/json" -d '{
 ```
 
 `priority` is one of `low`, `medium`, `high`, `urgent`. The response contains the ticket plus an `analysis` object with `categorization`, `sentiment`, `complexity`, `predicted_resolution_hours`, `escalation`, `routing`, `suggested_responses` and `draft_reply`.
+
+## Deployment
+
+The API ships as a container:
+
+```bash
+docker build -t ticket-router .
+docker run -p 8000:8000 -e ANTHROPIC_API_KEY=... ticket-router
+```
+
+The image trains the models at build time and listens on `0.0.0.0:$PORT` (default 8000), so it runs unchanged on hosts that build from a Dockerfile (Render, Railway, Fly.io, Cloud Run). Set `ANTHROPIC_API_KEY` as a secret on the host, not in the image; leave it unset to draft from templates. Use `/health` as the health check.
+
+For a free deployment, `render.yaml` defines a Render free-plan web service with Claude drafting turned off: in the Render dashboard choose **New > Blueprint** and select this repository. Free instances sleep after 15 minutes without traffic, and tickets are lost each time one does.
+
+Without Docker, the start command is `uvicorn ticket_router.api:app --host 0.0.0.0 --port $PORT`. Run a single instance with a single worker, because tickets and agent workloads are held in memory.
 
 ## How each component works
 
