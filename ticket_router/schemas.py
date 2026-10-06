@@ -39,6 +39,13 @@ class TicketCreate(BaseModel):
     description: str = Field(..., min_length=1, max_length=5000)
     priority: Priority = Priority.MEDIUM
 
+    model_config = {"json_schema_extra": {"examples": [{
+        "subject": "Charged twice this month",
+        "description": "I was billed twice for my subscription this month and nobody answered "
+                       "my last email. This is unacceptable, I want a refund!",
+        "priority": "high",
+    }]}}
+
 
 class CategorizationResult(BaseModel):
     category: Category
@@ -115,3 +122,22 @@ class Agent(BaseModel):
     skills: dict[Category, float]  # proficiency per category in [0, 1]
     max_load: int = Field(..., ge=1)
     current_load: int = 0
+
+
+class ChatMessage(BaseModel):
+    """One message typed by the customer in the web chat."""
+
+    text: str = Field(..., max_length=2000)
+
+
+class ChatEvent(BaseModel):
+    type: str  # "message" | "ticket" | "draft"
+    text: str | None = None
+    source: str | None = None  # for drafts: "llm" or "template"
+    ticket: Ticket | None = None
+
+
+class ChatTurn(BaseModel):
+    session_id: str
+    state: str  # awaiting_issue | awaiting_details | awaiting_priority | awaiting_more | done
+    events: list[ChatEvent]

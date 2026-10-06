@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Support Ticket Router</title>
+<meta name="description" content="Chat with a support assistant and see how each request is categorised, routed to an agent and answered.">
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --surface: #ffffff;
+    --surface-2: #f9fafb;
+    --border: #e3e6eb;
+    --text: #101828;
+    --muted: #5d6677;
+    --accent: #4338ca;
+    --accent-text: #ffffff;
+    --accent-weak: #eef0ff;
+    --good: #12803c;
+    --good-weak: #e3f6ea;
+    --warn: #a15c00;
+    --warn-weak: #fdf0d8;
+    --bad: #c0271d;
+    --bad-weak: #fde7e5;
+    --shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 1px 3px rgba(16, 24, 40, .06);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1016;
+      --surface: #161a22;
+      --surface-2: #1b202a;
+      --border: #2a313d;
+      --text: #e8ebf1;
+      --muted: #9aa4b5;
+      --accent: #8b93ff;
+      --accent-text: #0d1016;
+      --accent-weak: #20254a;
+      --good: #5fd08a;
+      --good-weak: #14301f;
+      --warn: #f0b354;
+      --warn-weak: #36280d;
+      --bad: #ff8a80;
+      --bad-weak: #3b1715;
+      --shadow: none;
+      color-scheme: dark;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, p { margin: 0; }
+  button, input, textarea { font: inherit; color: inherit; }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 20px; }
+
+  /* Header */
+  .top { background: var(--surface); border-bottom: 1px solid var(--border); }
+  .top-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 16px; padding-bottom: 16px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .logo { flex: none; width: 38px; height: 38px; border-radius: 10px; background: var(--accent); color: var(--accent-text); display: grid; place-items: center; }
+  .brand h1 { font-size: 18px; line-height: 1.25; letter-spacing: -.01em; }
+  .brand p { color: var(--muted); font-size: 13.5px; }
+  .top nav { display: flex; align-items: center; gap: 10px; }
+
+  /* Building blocks */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); padding: 22px; }
+  .card > h2 { font-size: 16px; margin-bottom: 4px; }
+  .hint { color: var(--muted); font-size: 13.5px; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 600; background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
+  .pill.good { background: var(--good-weak); color: var(--good); border-color: transparent; }
+  .pill.warn { background: var(--warn-weak); color: var(--warn); border-color: transparent; }
+  .pill.bad { background: var(--bad-weak); color: var(--bad); border-color: transparent; }
+  .pill.accent { background: var(--accent-weak); color: var(--accent); border-color: transparent; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 9px 16px; border-radius: 9px; border: 1px solid transparent; background: var(--accent); color: var(--accent-text); font-weight: 600; cursor: pointer; text-decoration: none; }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:disabled { opacity: .6; cursor: progress; }
+  .btn.ghost { background: transparent; color: var(--text); border-color: var(--border); }
+  .btn.ghost:hover { background: var(--surface-2); filter: none; }
+  .btn.small { padding: 5px 11px; font-size: 13px; border-radius: 7px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Layout */
+  main.wrap { padding-top: 24px; padding-bottom: 40px; display: grid; gap: 24px; }
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+  .split { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 24px; align-items: start; }
+  @media (max-width: 900px) { .grid, .split { grid-template-columns: minmax(0, 1fr); } }
+
+  /* Chat */
+  .chat { padding: 0; display: flex; flex-direction: column; height: min(660px, calc(100vh - 48px)); min-height: 420px; overflow: hidden; }
+  @media (min-width: 901px) { .chat { position: sticky; top: 24px; } }
+  .chat-head { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--border); }
+  .chat-head .who { flex: 1; min-width: 0; }
+  .chat-head strong { display: block; line-height: 1.25; }
+  .online { color: var(--muted); font-size: 13px; }
+  .online::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--good); margin-right: 6px; }
+  .avatar { flex: none; width: 38px; height: 38px; border-radius: 50%; background: var(--accent-weak); color: var(--accent); display: grid; place-items: center; font-weight: 700; font-size: 14px; }
+  .chat-log { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 10px; background: var(--surface-2); }
+  .msg { max-width: 86%; padding: 10px 14px; border-radius: 16px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .msg.bot { align-self: flex-start; background: var(--surface); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+  .msg.me { align-self: flex-end; background: var(--accent); color: var(--accent-text); border-bottom-right-radius: 4px; }
+  .msg.note { align-self: center; background: none; color: var(--muted); font-size: 13px; padding: 2px 8px; text-align: center; }
+  .msg.draft { border-left: 3px solid var(--accent); }
+  .msg .caption { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 6px; }
+  .ticket-card { align-self: flex-start; width: min(86%, 360px); background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .ticket-card header { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 14px; background: var(--accent-weak); color: var(--accent); font-weight: 650; font-size: 13.5px; }
+  .ticket-card dl { margin: 0; padding: 10px 14px; display: grid; grid-template-columns: auto 1fr; gap: 5px 14px; font-size: 14px; }
+  .ticket-card dt { color: var(--muted); }
+  .ticket-card dd { margin: 0; overflow-wrap: anywhere; }
+  .typing { display: inline-flex; gap: 4px; align-items: center; height: 21px; }
+  .typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: blink 1.2s infinite both; }
+  .typing i:nth-child(2) { animation-delay: .2s; } .typing i:nth-child(3) { animation-delay: .4s; }
+  @keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .typing i { animation: none; opacity: .6; } }
+  .quick { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 18px 0; }
+  .quick:empty { display: none; }
+  .chip { padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; font-size: 13px; }
+  .chip:hover { background: var(--accent-weak); border-color: transparent; color: var(--accent); }
+  .chip:disabled { opacity: .5; cursor: default; }
+  .composer { display: flex; gap: 10px; padding: 12px 18px 16px; }
+  .composer input { flex: 1; min-width: 0; padding: 10px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-2); }
+  .composer input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+  .composer .btn { border-radius: 999px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  [hidden] { display: none !important; }
+
+  /* Result */
+  .panel-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 14px; }
+  .empty { text-align: center; color: var(--muted); padding: 56px 16px; }
+  .empty strong { display: block; color: var(--text); font-size: 16px; margin-bottom: 4px; }
+  .result-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+  .result-head h2 { font-size: 18px; letter-spacing: -.01em; overflow-wrap: anywhere; }
+  .ticket-id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; color: var(--muted); }
+  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+  @media (max-width: 560px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .stat { background: var(--surface-2); border: 1px solid var(--border); border-radius: 11px; padding: 12px 14px; min-width: 0; }
+  .stat dt { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  .stat dd { margin: 2px 0 0; font-size: 17px; font-weight: 650; overflow-wrap: anywhere; text-transform: capitalize; }
+  .stat small { display: block; color: var(--muted); font-size: 12.5px; font-weight: 400; text-transform: none; }
+  .meter { height: 5px; border-radius: 999px; background: var(--border); margin-top: 8px; overflow: hidden; }
+  .meter i { display: block; height: 100%; border-radius: 999px; background: var(--accent); }
+  .meter.good i { background: var(--good); } .meter.warn i { background: var(--warn); } .meter.bad i { background: var(--bad); }
+  .block { margin-top: 20px; }
+  .block h3 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .agent { display: flex; gap: 12px; align-items: flex-start; }
+  .agent strong { display: block; }
+  .reasons { margin: 0; padding-left: 18px; color: var(--muted); font-size: 14px; }
+  .reply { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--surface-2); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 9px; padding: 14px 16px; font-size: 14.5px; }
+  details { border: 1px solid var(--border); border-radius: 9px; padding: 9px 12px; margin-top: 8px; }
+  details summary { cursor: pointer; display: flex; justify-content: space-between; gap: 12px; font-weight: 550; font-size: 14px; }
+  details p { margin-top: 8px; color: var(--muted); font-size: 14px; }
+
+  /* Board */
+  .tiles { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 900px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .tile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow); }
+  .tile b { display: block; font-size: 26px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .tile span { color: var(--muted); font-size: 13px; }
+  .section-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 10px; }
+  .rows { display: grid; grid-template-columns: minmax(0, 1fr); margin-top: 12px; }
+  @media (max-width: 560px) { .row { flex-wrap: wrap; } .row-main { flex-basis: 100%; } }
+  .row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-top: 1px solid var(--border); }
+  .row-main { flex: 1; min-width: 0; text-align: left; background: none; border: 0; padding: 0; cursor: pointer; }
+  .row-main strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+  .row-main:hover strong { color: var(--accent); }
+  .row-main span { color: var(--muted); font-size: 13px; }
+  .agent-row { display: block; padding: 11px 0; border-top: 1px solid var(--border); }
+  .agent-row .line { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+  .agent-row .line span { color: var(--muted); font-size: 13px; white-space: nowrap; }
+  footer { color: var(--muted); font-size: 13px; text-align: center; padding: 0 20px 32px; }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap top-inner">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h7a4 4 0 0 1 4 4v8"/><path d="M4 18h5"/><path d="m12 15 3 3 3-3"/><path d="M15 6h5"/></svg>
+      </span>
+      <div>
+        <h1>Support Ticket Router</h1>
+        <p>Chat with support: your request is categorised, routed to an agent and answered.</p>
+      </div>
+    </div>
+    <nav>
+      <span id="mode" class="pill">Connecting…</span>
+      <a class="btn ghost" href="/docs">API docs</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="grid">
+    <section class="card chat" aria-labelledby="chat-title">
+      <div class="chat-head">
+        <span class="avatar" aria-hidden="true">A</span>
+        <div class="who">
+          <strong id="chat-title">Ava</strong>
+          <span class="online">Support assistant · online</span>
+        </div>
+        <button id="new-chat" class="btn ghost small" type="button">New chat</button>
+      </div>
+      <div id="log" class="chat-log" role="log" aria-live="polite"></div>
+      <div id="quick" class="quick"></div>
+      <form id="composer" class="composer" autocomplete="off">
+        <label class="sr-only" for="message">Message</label>
+        <input id="message" type="text" maxlength="2000" placeholder="Type your message…">
+        <button id="send" class="btn" type="submit">Send</button>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="panel-title">
+      <h2 id="panel-title" class="panel-title">Agent view</h2>
+      <div id="result">
+        <div class="empty">
+          <strong>No ticket yet</strong>
+          Tell Ava about a problem. Once she opens a ticket, the analysis support staff
+          would see appears here: category, sentiment, risk and the assigned agent.
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section aria-labelledby="queues-title">
+    <h2 id="queues-title" class="section-title">Open tickets by queue</h2>
+    <div id="queues" class="tiles"></div>
+  </section>
+
+  <div class="split">
+    <section class="card" aria-labelledby="tickets-title">
+      <h2 id="tickets-title">Tickets</h2>
+      <p class="hint">Select a ticket to view its analysis. Resolving one frees its agent.</p>
+      <div id="tickets" class="rows"></div>
+    </section>
+    <section class="card" aria-labelledby="agents-title">
+      <h2 id="agents-title">Agents</h2>
+      <p class="hint">Current workload against each agent's capacity.</p>
+      <div id="agents" class="rows"></div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  Demo instance: Ava follows a scripted flow, and tickets are kept in memory and reset when the service restarts.
+  The same data is available through the <a href="/docs">REST API</a>.
+</footer>
+
+<script>
+const EXAMPLES = [
+  { label: "Double charge", text: "I was charged twice for the same order this month and nobody answered my last email. This is unacceptable, please refund the duplicate charge!" },
+  { label: "App crash", text: "Every time I export a report to PDF the app freezes and then crashes with error code 500. I already tried reinstalling and clearing the cache." },
+  { label: "Lost parcel", text: "My order was marked as delivered three days ago but nothing arrived. The tracking page has not updated since." },
+  { label: "Locked out", text: "The password reset email never arrives, so I am locked out of my account. Could you help me get back in?" },
+];
+// Quick replies offered for each conversation state: [button label, message sent].
+const QUICK_REPLIES = {
+  awaiting_issue: EXAMPLES.map((example) => [example.label, example.text]),
+  awaiting_priority: [["Low", "low"], ["Medium", "medium"], ["High", "high"], ["Urgent", "urgent"]],
+  awaiting_more: [["No, that's all", "no thanks"], ["Yes, one more", "yes"]],
+};
+const MIN_TYPING_MS = 500;
+const LEVELS = { 1: "Junior", 2: "Intermediate", 3: "Senior" };
+const SENTIMENT_TONE = { positive: "good", neutral: "", negative: "warn", very_negative: "bad" };
+const COMPLEXITY_TONE = { low: "good", medium: "warn", high: "bad" };
+const PRIORITY_TONE = { low: "", medium: "accent", high: "warn", urgent: "bad" };
+
+const $ = (id) => document.getElementById(id);
+let selectedId = null;
+let sessionId = null;
+let busy = false;
+
+// Builds DOM nodes with textContent only, so ticket text is never parsed as HTML.
+function el(tag, props = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(props)) {
+    if (value === null || value === undefined || value === false) continue;
+    if (key === "class") node.className = value;
+    else if (key === "text") node.textContent = value;
+    else if (key.startsWith("on")) node.addEventListener(key.slice(2), value);
+    else node.setAttribute(key, value);
+  }
+  node.append(...children.flat().filter((c) => c !== null && c !== undefined && c !== false));
+  return node;
+}
+
+async function api(path, options) {
+  const response = await fetch(path, options);
+  if (response.ok) return response.json();
+  let message = `Request failed (${response.status})`;
+  try {
+    const { detail } = await response.json();
+    if (typeof detail === "string") message = detail;
+    else if (Array.isArray(detail)) message = detail.map((d) => `${d.loc[d.loc.length - 1]}: ${d.msg}`).join("; ");
+  } catch { /* keep the generic message */ }
+  throw Object.assign(new Error(message), { status: response.status });
+}
+
+const percent = (value) => `${Math.round(value * 100)}%`;
+const words = (value) => value.replace(/_/g, " ");
+
+function formatHours(hours) {
+  const [value, unit] = hours < 24 ? [Math.max(Math.round(hours), 1), "hour"] : [Math.round(hours / 24), "day"];
+  return `${value} ${unit}${value === 1 ? "" : "s"}`;
+}
+
+function initials(name) {
+  return name.split(/\s+/).map((part) => part[0]).slice(0, 2).join("").toUpperCase();
+}
+
+function stat(label, value, note, meter) {
+  return el("div", { class: "stat" },
+    el("dt", { text: label }),
+    el("dd", {}, value, note && el("small", { text: note })),
+    meter && el("div", { class: `meter ${meter.tone || ""}` },
+      el("i", { style: `width:${Math.max(3, Math.min(100, meter.value * 100))}%` })));
+}
+
+function renderTicket(ticket) {
+  selectedId = ticket.id;
+  const a = ticket.analysis;
+  const escalationTone = a.escalation.likely ? "bad" : a.escalation.probability >= 0.3 ? "warn" : "good";
+  const resolved = ticket.status === "resolved";
+
+  const copy = el("button", { class: "btn ghost small", type: "button", text: "Copy", onclick: async () => {
+    try { await navigator.clipboard.writeText(a.draft_reply.text); copy.textContent = "Copied"; }
+    catch { copy.textContent = "Copy failed"; }
+    setTimeout(() => { copy.textContent = "Copy"; }, 1600);
+  } });
+
+  $("result").replaceChildren(
+    el("div", { class: "result-head" },
+      el("div", {},
+        el("div", { class: "ticket-id", text: ticket.id }),
+        el("h2", { text: ticket.subject })),
+      el("div", { class: "chips" },
+        el("span", { class: `pill ${PRIORITY_TONE[ticket.priority]}`, text: `${ticket.priority} priority` }),
+        el("span", { class: `pill ${resolved ? "good" : "accent"}`, text: resolved ? "Resolved" : "Open" }))),
+
+    el("dl", { class: "stats", style: "margin-bottom:0" },
+      stat("Category", a.categorization.category,
+        `${percent(a.categorization.confidence)} confident · ${a.categorization.method === "ml" ? "ML model" : "keyword rules"}`,
+        { value: a.categorization.confidence }),
+      stat("Queue", a.routing.queue),
+      stat("Est. resolution", formatHours(a.predicted_resolution_hours)),
+      stat("Sentiment", words(a.sentiment.label), `score ${a.sentiment.score.toFixed(2)}`,
+        { value: (a.sentiment.score + 1) / 2, tone: SENTIMENT_TONE[a.sentiment.label] }),
+      stat("Complexity", a.complexity.level, `score ${a.complexity.score.toFixed(2)}`,
+        { value: a.complexity.score, tone: COMPLEXITY_TONE[a.complexity.level] }),
+      stat("Escalation risk", percent(a.escalation.probability), a.escalation.likely ? "likely to escalate" : "unlikely to escalate",
+        { value: a.escalation.probability, tone: escalationTone })),
+
+    el("div", { class: "block" },
+      el("h3", { text: "Assigned to" }),
+      el("div", { class: "agent" },
+        el("span", { class: "avatar", "aria-hidden": "true", text: a.routing.agent_name ? initials(a.routing.agent_name) : "–" }),
+        el("div", {},
+          el("strong", { text: a.routing.agent_name || "Waiting in queue" }),
+          el("span", { class: "hint", text: a.routing.reason })))),
+
+    a.escalation.reasons.length > 0 && el("div", { class: "block" },
+      el("h3", { text: "Risk signals" }),
+      el("ul", { class: "reasons" }, a.escalation.reasons.map((reason) => el("li", { text: reason })))),
+
+    el("div", { class: "block" },
+      el("h3", {},
+        el("span", { text: `Drafted reply · ${a.draft_reply.source === "llm" ? "written by Claude" : "from template"}` }),
+        copy),
+      el("div", { class: "reply", text: a.draft_reply.text })),
+
+    el("div", { class: "block" },
+      el("h3", { text: "Suggested responses" }),
+      a.suggested_responses.map((s) => el("details", {},
+        el("summary", {}, el("span", { text: s.title }), el("span", { class: "hint", text: `${percent(s.relevance)} match` })),
+        el("p", { text: s.body })))),
+  );
+}
+
+function renderQueues(queues) {
+  $("queues").replaceChildren(...Object.entries(queues).map(([name, info]) =>
+    el("div", { class: "tile" }, el("b", { text: String(info.open_tickets) }), el("span", { text: name }))));
+}
+
+function renderTickets(tickets) {
+  if (tickets.length === 0) {
+    $("tickets").replaceChildren(el("p", { class: "hint", style: "padding-top:12px;border-top:1px solid var(--border)", text: "No tickets yet." }));
+    return;
+  }
+  $("tickets").replaceChildren(...tickets.slice().reverse().map((ticket) => {
+    const routing = ticket.analysis.routing;
+    const resolved = ticket.status === "resolved";
+    return el("div", { class: "row" },
+      el("button", { class: "row-main", type: "button", onclick: () => { renderTicket(ticket); $("result").scrollIntoView({ behavior: "smooth", block: "nearest" }); } },
+        el("strong", { text: ticket.subject }),
+        el("span", { text: `${ticket.id} · ${routing.queue} · ${routing.agent_name || "unassigned"}` })),
+      el("span", { class: `pill ${PRIORITY_TONE[ticket.priority]}`, text: ticket.priority }),
+      resolved
+        ? el("span", { class: "pill good", text: "Resolved" })
+        : el("button", { class: "btn ghost small", type: "button", text: "Resolve", onclick: () => resolve(ticket.id) }));
+  }));
+}
+
+function renderAgents(agents) {
+  $("agents").replaceChildren(...agents.map((agent) => {
+    const load = agent.current_load / agent.max_load;
+    return el("div", { class: "agent-row" },
+      el("div", { class: "line" },
+        el("strong", { text: agent.name }),
+        el("span", { text: `${agent.current_load} / ${agent.max_load}` })),
+      el("span", { class: "hint", text: `${LEVELS[agent.level]} · ${agent.team}` }),
+      el("div", { class: `meter ${load >= 1 ? "bad" : load >= 0.75 ? "warn" : ""}` }, el("i", { style: `width:${load * 100}%` })));
+  }));
+}
+
+async function refreshBoard() {
+  const [queues, tickets, agents] = await Promise.all([api("/queues"), api("/tickets"), api("/agents")]);
+  renderQueues(queues);
+  renderTickets(tickets);
+  renderAgents(agents);
+}
+
+async function resolve(id) {
+  try {
+    const ticket = await api(`/tickets/${encodeURIComponent(id)}/resolve`, { method: "POST" });
+    if (selectedId === id) renderTicket(ticket);
+    await refreshBoard();
+  } catch (error) {
+    showError(error.message);
+  }
+}
+
+function showError(message) {
+  note(message);
+}
+
+// ------------------------------------------------------------------ chat
+
+function addToLog(node) {
+  $("log").append(node);
+  $("log").scrollTop = $("log").scrollHeight;
+  return node;
+}
+
+const bubble = (kind, text) => addToLog(el("div", { class: `msg ${kind}`, text }));
+const note = (text) => bubble("note", text);
+
+function ticketCard(ticket) {
+  const routing = ticket.analysis.routing;
+  const rows = [
+    ["Subject", ticket.subject],
+    ["Priority", ticket.priority[0].toUpperCase() + ticket.priority.slice(1)],
+    ["Team", routing.queue],
+    ["Assigned to", routing.agent_name || "Next available agent"],
+    ["Expected fix", `within about ${formatHours(ticket.analysis.predicted_resolution_hours)}`],
+  ];
+  return el("div", { class: "ticket-card" },
+    el("header", {}, el("span", { text: "Support ticket" }), el("span", { class: "ticket-id", style: "color:inherit", text: ticket.id })),
+    el("dl", {}, rows.map(([label, value]) => [el("dt", { text: label }), el("dd", { text: value })])));
+}
+
+function applyTurn(turn) {
+  sessionId = turn.session_id;
+  for (const event of turn.events) {
+    if (event.type === "ticket") {
+      addToLog(ticketCard(event.ticket));
+      renderTicket(event.ticket);
+      refreshBoard().catch(() => {});
+    } else if (event.type === "draft") {
+      addToLog(el("div", { class: "msg bot draft" },
+        el("span", { class: "caption", text: event.source === "llm" ? "Reply written by Claude" : "Reply from our support team" }),
+        event.text));
+    } else {
+      bubble("bot", event.text);
+    }
+  }
+  renderQuickReplies(turn.state);
+}
+
+function renderQuickReplies(state) {
+  const ended = state === "done";
+  $("message").disabled = ended;
+  $("send").disabled = ended;
+  $("message").placeholder = ended ? "This chat has ended" : "Type your message…";
+  const chips = (QUICK_REPLIES[state] || []).map(([label, text]) =>
+    el("button", { class: "chip", type: "button", text: label, onclick: () => send(text) }));
+  if (ended) chips.push(el("button", { class: "chip", type: "button", text: "Start a new chat", onclick: startChat }));
+  $("quick").replaceChildren(...chips);
+}
+
+function setBusy(value) {
+  busy = value;
+  $("send").disabled = value;
+  for (const chip of $("quick").children) chip.disabled = value;
+}
+
+async function startChat() {
+  if (busy) return;
+  setBusy(true);
+  $("log").replaceChildren();
+  $("quick").replaceChildren();
+  try {
+    applyTurn(await api("/chat", { method: "POST" }));
+  } catch (error) {
+    note(`Could not reach support: ${error.message}`);
+  } finally {
+    setBusy(false);
+    $("message").focus();
+  }
+}
+
+async function send(text) {
+  text = text.trim();
+  if (busy || !text || !sessionId) return;
+  bubble("me", text);
+  $("message").value = "";
+  setBusy(true);
+  const typing = addToLog(el("div", { class: "msg bot", "aria-label": "Ava is typing" },
+    el("span", { class: "typing" }, el("i"), el("i"), el("i"))));
+  try {
+    const [turn] = await Promise.all([
+      api(`/chat/${sessionId}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      }),
+      new Promise((done) => setTimeout(done, MIN_TYPING_MS)),
+    ]);
+    typing.remove();
+    applyTurn(turn);
+  } catch (error) {
+    typing.remove();
+    if (error.status === 404) {
+      // The service restarted and dropped the session, so begin again.
+      note("The connection was reset, so this is a fresh conversation. Please send your message again.");
+      applyTurn(await api("/chat", { method: "POST" }));
+    } else {
+      note(`Message not sent: ${error.message}`);
+    }
+  } finally {
+    setBusy(false);
+    if (!$("message").disabled) $("message").focus();
+  }
+}
+
+$("composer").addEventListener("submit", (event) => {
+  event.preventDefault();
+  send($("message").value);
+});
+$("new-chat").addEventListener("click", startChat);
+
+api("/health").then((health) => {
+  $("mode").textContent = health.llm_drafting ? "Replies drafted by Claude" : "Replies drafted from templates";
+  $("mode").className = "pill good";
+}).catch(() => {
+  $("mode").textContent = "Service unreachable";
+  $("mode").className = "pill bad";
+});
+refreshBoard().catch(() => {});
+startChat();
+</script>
+</body>
+</html>

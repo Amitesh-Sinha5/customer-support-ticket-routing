@@ -53,10 +53,31 @@ def test_resolve_releases_agent(client):
     assert load() == 0
 
 
-def test_root_redirects_to_docs(client):
-    response = client.get("/", follow_redirects=False)
-    assert response.status_code == 307
-    assert response.headers["location"] == "/docs"
+def test_home_page_is_served(client):
+    response = client.get("/")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/html")
+    assert "Support Ticket Router" in response.text
+
+
+def test_chat_opens_a_ticket_visible_to_the_api(client):
+    turn = client.post("/chat").json()
+    assert turn["state"] == "awaiting_issue" and turn["events"][0]["type"] == "message"
+    say = lambda text: client.post(f"/chat/{turn['session_id']}/messages", json={"text": text}).json()
+
+    assert say("my parcel is late")["state"] == "awaiting_details"
+    assert say("It should have arrived 5 days ago and tracking has not moved.")["state"] == "awaiting_priority"
+    reply = say("high")
+    assert [e["type"] for e in reply["events"]] == ["message", "ticket", "draft", "message"]
+    ticket = reply["events"][1]["ticket"]
+    assert ticket["priority"] == "high"
+    assert ticket["analysis"]["routing"]["queue"] == "Shipping & Delivery"
+    assert client.get(f"/tickets/{ticket['id']}").json()["id"] == ticket["id"]
+    assert say("no thanks")["state"] == "done"
+
+
+def test_unknown_chat_session_returns_404(client):
+    assert client.post("/chat/nope/messages", json={"text": "hello"}).status_code == 404
 
 
 def test_unknown_ticket_returns_404(client):

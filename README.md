@@ -1,10 +1,11 @@
 # Automated Customer Support Ticket Routing & Response
 
-A ticket-triage system that receives support tickets (subject, description, priority), categorizes them, analyses sentiment and complexity, routes them to the best-suited agent, predicts resolution time and escalation risk, and drafts an initial reply. It can be used through a **REST API** or a **customer chat in the terminal**.
+A ticket-triage system that receives support tickets (subject, description, priority), categorizes them, analyses sentiment and complexity, routes them to the best-suited agent, predicts resolution time and escalation risk, and drafts an initial reply. It can be used through a **web chat page**, a **REST API** or a **customer chat in the terminal**.
 
 - [Features](#features)
 - [Architecture](#architecture)
 - [Quick start](#quick-start)
+- [Web chat](#web-chat)
 - [Terminal chat](#terminal-chat)
 - [REST API](#rest-api)
 - [Deployment](#deployment)
@@ -87,6 +88,12 @@ python scripts/demo.py            # run 5 sample tickets and print the full anal
 
 To have Claude write the draft replies, set an API key first: `export ANTHROPIC_API_KEY=...`.
 
+## Web chat
+
+Start the API and open `http://localhost:8000/`. The page is a chat with Ava, the same assistant as the terminal chat: she collects the issue, asks for more detail and a priority, opens the ticket and shows the drafted reply. Beside the chat, the **Agent view** shows what support staff would see for that ticket (category, sentiment, complexity, escalation risk, assigned agent, suggested responses), and below it are the open-ticket counts per queue, the ticket list with a Resolve button, and each agent's workload.
+
+The page is a single static file, `ticket_router/static/index.html`, with no build step. Chat sessions are held in memory like tickets, so a restart ends any chat in progress.
+
 ## Terminal chat
 
 ```bash
@@ -112,6 +119,9 @@ Start with `uvicorn ticket_router.api:app --reload`; interactive docs are at `ht
 
 | Method | Path | Description |
 |---|---|---|
+| `GET` | `/` | Web chat page |
+| `POST` | `/chat` | Open a chat session and get the greeting |
+| `POST` | `/chat/{session_id}/messages` | Send a customer message; returns the replies and any ticket opened |
 | `POST` | `/tickets` | Submit a ticket and get the full analysis |
 | `GET` | `/tickets` | List tickets; filter with `?queue=Billing&status=open` |
 | `GET` | `/tickets/{id}` | Get one ticket |
@@ -207,6 +217,8 @@ ticket_router/
   responses.py             template ranking and draft generation
   training.py              training and model persistence
   chat.py                  chat conversation logic
+  chat_sessions.py         web chat sessions (in memory)
+  static/index.html        web chat page
   chat_cli.py              terminal UI (rich)
   chat_export.py           Markdown transcript export
   store.py                 in-memory ticket store
@@ -222,7 +234,7 @@ tests/                     pytest suite
 pytest
 ```
 
-The 34 tests cover keyword and ML categorization (including unseen wording), sentiment, complexity, routing rules (seniority, expertise, load, release, fallback), the full pipeline, the Claude path with a fake client (success, refusal, malformed output), the API, and the chat flow and export.
+The 37 tests cover keyword and ML categorization (including unseen wording), sentiment, complexity, routing rules (seniority, expertise, load, release, fallback), the full pipeline, the Claude path with a fake client (success, refusal, malformed output), the API (including the web chat endpoints), and the chat flow and export.
 
 ## Limitations and next steps
 
